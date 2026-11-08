@@ -1,0 +1,85 @@
+#!/bin/bash
+# check NN — controleert de toestand van de sandbox voor oefening NN
+G='\e[32m'; R='\e[31m'; Y='\e[33m'; N='\e[0m'
+fails=0
+ok()   { echo -e "  ${G}✔${N} $1"; }
+nok()  { echo -e "  ${R}✘${N} $1"; fails=$((fails+1)); }
+t()    { if eval "$2" >/dev/null 2>&1; then ok "$1"; else nok "$1"; fi; }
+running() { [ "$(docker inspect -f '{{.State.Running}}' "$1" 2>/dev/null)" = true ]; }
+img()  { docker image inspect "$1" >/dev/null 2>&1; }
+http() { curl -fsS --max-time 5 "http://localhost:$1${2:-/}"; }
+
+n=$(printf '%02d' "$((10#${1:-0}))" 2>/dev/null)
+[ -z "$1" ] && { echo "gebruik: check NN   (bv. check 05)"; exit 1; }
+echo -e "${Y}Check oefening $n${N}"
+case $n in
+01) t "er bestaat een container van image hello-world" '[ -n "$(docker ps -a -q --filter ancestor=hello-world)" ]'
+    t "die container is gestopt (exited) — hello-world draait maar even" '[ -n "$(docker ps -a -q --filter ancestor=hello-world --filter status=exited)" ]' ;;
+02) t "container 'web1' bestaat" 'docker inspect web1'
+    t "web1 draait (detached)" 'running web1'
+    t "web1 gebruikt image nginx" 'docker inspect -f "{{.Config.Image}}" web1 | grep -q "^nginx"'
+    t "bestand /tmp/bewijs.txt bestaat IN de container (via docker exec)" 'docker exec web1 test -f /tmp/bewijs.txt' ;;
+03) t "image alpine:3.20 aanwezig" 'img alpine:3.20'
+    t "image alpine:3.21 aanwezig" 'img alpine:3.21'
+    t "myalpine:v1 bestaat" 'img myalpine:v1'
+    t "myalpine:v1 heeft dezelfde ID als alpine:3.21" '[ "$(docker image inspect -f {{.Id}} myalpine:v1)" = "$(docker image inspect -f {{.Id}} alpine:3.21)" ]'
+    t "myalpine:latest wijst ook naar alpine:3.21" '[ "$(docker image inspect -f {{.Id}} myalpine:latest)" = "$(docker image inspect -f {{.Id}} alpine:3.21)" ]' ;;
+04) t "image mijnubuntu:curl bestaat" 'img mijnubuntu:curl'
+    t "curl is geïnstalleerd in die image" 'docker run --rm mijnubuntu:curl which curl'
+    t "/hallo.txt bevat 'CS2'" 'docker run --rm mijnubuntu:curl grep -q CS2 /hallo.txt' ;;
+05) t "container 'web-port' draait" 'running web-port'
+    t "poort 18080 op host → 80 in container" 'docker port web-port 80 | grep -q 18080'
+    t "http://localhost:18080 antwoordt" 'http 18080' ;;
+06) t "container 'db-env' draait" 'running db-env'
+    t "MARIADB_ROOT_PASSWORD=geheim gezet" 'docker inspect -f "{{json .Config.Env}}" db-env | grep -q "MARIADB_ROOT_PASSWORD=geheim"'
+    t "database 'school' bestaat (kan ~15s duren na start)" 'docker exec db-env mariadb -uroot -pgeheim -e "use school"' ;;
+07) t "named volume 'webdata' bestaat" 'docker volume inspect webdata'
+    t "container 'web-vol' draait op poort 18086" 'running web-vol && docker port web-vol 80 | grep -q 18086'
+    t "webdata is gemount op /usr/share/nginx/html" 'docker inspect -f "{{range .Mounts}}{{.Name}}:{{.Destination}} {{end}}" web-vol | grep -q "webdata:/usr/share/nginx/html"'
+    t "pagina bevat 'persistent'" 'http 18086 | grep -qi persistent'
+    t "container 'tijdelijk' bestaat niet meer (data overleefde zijn verwijdering)" '! docker inspect tijdelijk' ;;
+08) t "container 'web-bind' draait op poort 18081" 'running web-bind && docker port web-bind 80 | grep -q 18081'
+    t "mount is van type bind" 'docker inspect -f "{{range .Mounts}}{{.Type}} {{end}}" web-bind | grep -q bind'
+    t "bron is /work/oefeningen/08-bind-mount/site" 'docker inspect -f "{{range .Mounts}}{{.Source}} {{end}}" web-bind | grep -q "08-bind-mount/site"'
+    t "pagina toont inhoud van site/index.html" 'http 18081 | grep -q "Bind mount werkt"' ;;
+09) t "netwerk 'labnet' bestaat (bridge)" '[ "$(docker network inspect -f {{.Driver}} labnet)" = bridge ]'
+    t "container 'api' draait op labnet" 'running api && docker inspect -f "{{json .NetworkSettings.Networks}}" api | grep -q labnet'
+    t "container 'app' draait op labnet" 'running app && docker inspect -f "{{json .NetworkSettings.Networks}}" app | grep -q labnet'
+    t "app kan api bereiken via naam (DNS)" 'docker exec app wget -qO- http://api'
+    t "container 'eenzaam' (default bridge) kan api NIET op naam bereiken" 'running eenzaam && ! docker exec eenzaam wget -T 3 -qO- http://api' ;;
+10) d=/work/oefeningen/10-wordpress
+    t "compose.yaml bestaat" "[ -f $d/compose.yaml ]"
+    t "compose-file is geldig" "docker compose -f $d/compose.yaml config -q"
+    t "2 services draaien" '[ "$(docker compose -f '$d'/compose.yaml ps -q --status running | wc -l)" -ge 2 ]'
+    t "named volume voor de database" 'docker volume ls -q | grep -q "10-wordpress_"'
+    t "WordPress antwoordt op 18082" 'curl -s -o /dev/null -w "%{http_code}" --max-time 10 http://localhost:18082 | grep -qE "200|302"' ;;
+11) t "image staticweb:1.0 bestaat" 'img staticweb:1.0'
+    t "base image is nginx:alpine (heeft /etc/alpine-release)" 'docker run --rm --entrypoint cat staticweb:1.0 /etc/alpine-release'
+    t "container 'static' draait op 18083" 'running static && docker port static 80 | grep -q 18083'
+    t "pagina toont 'Static via Dockerfile'" 'http 18083 | grep -q "Static via Dockerfile"' ;;
+12) t "image nodeapp:1.0 bestaat" 'img nodeapp:1.0'
+    t "USER is gezet en niet root" 'u=$(docker image inspect -f {{.Config.User}} nodeapp:1.0); [ -n "$u" ] && [ "$u" != root ] && [ "$u" != 0 ]'
+    t "EXPOSE 3000" 'docker image inspect -f "{{json .Config.ExposedPorts}}" nodeapp:1.0 | grep -q 3000'
+    t "container 'node' draait op 18084" 'running node && docker port node 3000 | grep -q 18084'
+    t "app antwoordt en draait niet als root" 'http 18084 | grep -q "user="  && ! http 18084 | grep -q "user=root"' ;;
+13) t "image pinger bestaat" 'img pinger'
+    t "ENTRYPOINT is [ping -c 3] (exec-vorm)" '[ "$(docker image inspect -f "{{json .Config.Entrypoint}}" pinger)" = "[\"ping\",\"-c\",\"3\"]" ]'
+    t "CMD is [localhost]" '[ "$(docker image inspect -f "{{json .Config.Cmd}}" pinger)" = "[\"localhost\"]" ]'
+    t "docker run pinger 127.0.0.1 werkt" 'docker run --rm pinger 127.0.0.1' ;;
+14) t "image gohello:multi bestaat" 'img gohello:multi'
+    t "image is kleiner dan 30 MB (dus GEEN go-compiler erin)" '[ "$(docker image inspect -f {{.Size}} gohello:multi)" -lt 30000000 ]'
+    t "geen go-binary in de image" '! docker run --rm --entrypoint sh gohello:multi -c "which go"'
+    t "draait en print 'Hallo vanuit multi-stage'" 'docker run --rm gohello:multi | grep -q "Hallo vanuit multi-stage"' ;;
+15) t "container 'registry' draait op poort 5000" 'running registry && docker port registry 5000 | grep -q 5000'
+    t "staticweb staat in de registry" 'curl -fsS localhost:5000/v2/_catalog | grep -q staticweb'
+    t "tag 1.0 is gepusht" 'curl -fsS localhost:5000/v2/staticweb/tags/list | grep -q "1.0"'
+    t "image is lokaal verwijderd en terug gepulld" 'img localhost:5000/staticweb:1.0' ;;
+16) d=/work/oefeningen/16-flask-redis
+    t "Dockerfile bestaat" "[ -f $d/Dockerfile ]"
+    t "compose.yaml bevat 'build:'" "grep -q 'build' $d/compose.yaml"
+    t "services draaien" '[ "$(docker compose -f '$d'/compose.yaml ps -q --status running | wc -l)" -ge 2 ]'
+    t "teller verhoogt bij elke request op 18085" 'a=$(http 18085 | grep -oE "[0-9]+" | tail -1); b=$(http 18085 | grep -oE "[0-9]+" | tail -1); [ "$b" -gt "$a" ]' ;;
+*) echo "Onbekende oefening. Typ: oefeningen"; exit 1 ;;
+esac
+echo
+if [ $fails -eq 0 ]; then echo -e "${G}Alles juist! 🎉${N}"; else echo -e "${R}$fails check(s) gefaald.${N}  Tip: opdracht $n  |  oplossing $n"; fi

@@ -1,0 +1,9 @@
+# Vul aan!
+services:
+  db:
+    image:
+
+  wordpress:
+    image:
+
+volumes:

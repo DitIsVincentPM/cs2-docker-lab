@@ -1,0 +1,933 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CS2 Docker Studie</title>
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<style>
+:root{--bg:#0d1117;--panel:#161b22;--panel2:#1c2330;--border:#30363d;--fg:#e6edf3;--muted:#8b949e;--accent:#2f81f7;--ok:#3fb950;--bad:#f85149;--warn:#d29922;--code:#0b0f14;--radius:10px;
+  --mono:ui-monospace,"Cascadia Code","JetBrains Mono",Consolas,monospace}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 system-ui,"Segoe UI",sans-serif;height:100%}
+header{display:flex;align-items:center;gap:6px;padding:8px 14px;border-bottom:1px solid var(--border);background:var(--panel);position:sticky;top:0;z-index:5;flex-wrap:wrap}
+header h1{font-size:16px;margin:0 14px 0 0;white-space:nowrap}
+header h1 span{color:var(--accent)}
+nav button,.btn{background:transparent;color:var(--fg);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font:inherit;font-size:14px}
+nav button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn:hover,nav button:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.ok{background:#238636;border-color:#238636;color:#fff}
+.btn.small{padding:3px 9px;font-size:13px}
+#prog{margin-left:auto;color:var(--muted);font-size:13px}
+main{height:calc(100% - 52px)}
+section{display:none;height:100%}
+section.on{display:block}
+.wrap{max-width:900px;margin:0 auto;padding:20px 16px 80px}
+code,pre{font-family:var(--mono);font-size:13.5px}
+:not(pre)>code{background:var(--panel2);padding:1px 6px;border-radius:5px;color:#ffa657}
+pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padding:12px;overflow:auto}
+table{border-collapse:collapse;width:100%;margin:10px 0}
+th,td{border:1px solid var(--border);padding:6px 9px;text-align:left;vertical-align:top}
+th{background:var(--panel2)}
+blockquote{margin:10px 0;padding:8px 14px;border-left:3px solid var(--warn);background:#d299220f;border-radius:0 8px 8px 0}
+a{color:var(--accent)}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin:14px 0}
+.muted{color:var(--muted)}
+/* Leren */
+#learn{display:none;grid-template-columns:230px 1fr;height:100%}
+#learn.on{display:grid}
+#toc{border-right:1px solid var(--border);padding:14px 10px;overflow:auto;background:var(--panel)}
+#toc button{display:block;width:100%;text-align:left;background:none;border:0;color:var(--fg);padding:7px 10px;border-radius:7px;cursor:pointer;font:inherit;font-size:14px}
+#toc button.on{background:var(--panel2);color:var(--accent)}
+#toc button .d{float:right;color:var(--ok)}
+#chap{overflow:auto}
+#chap h2{border-bottom:1px solid var(--border);padding-bottom:6px}
+/* Flashcards */
+.fc{perspective:1200px;height:300px;cursor:pointer;margin:20px 0}
+.fc-in{position:relative;width:100%;height:100%;transition:transform .45s;transform-style:preserve-3d}
+.fc.flip .fc-in{transform:rotateY(180deg)}
+.fc-f,.fc-b{position:absolute;inset:0;backface-visibility:hidden;border-radius:14px;border:1px solid var(--border);display:flex;flex-direction:column;justify-content:center;align-items:center;padding:24px;text-align:center;font-size:20px;overflow:auto}
+.fc-f{background:var(--panel)}
+.fc-b{background:var(--panel2);transform:rotateY(180deg);font-size:16px;text-align:left;align-items:stretch}
+.tag{display:inline-block;font-size:12px;padding:2px 8px;border-radius:99px;background:var(--panel2);color:var(--muted);margin-bottom:10px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+/* Quiz */
+.opt{display:block;width:100%;text-align:left;background:var(--panel2);border:1px solid var(--border);color:var(--fg);border-radius:8px;padding:10px 14px;margin:7px 0;cursor:pointer;font:inherit}
+.opt:hover{border-color:var(--accent)}
+.opt.good{border-color:var(--ok);background:#3fb9501a}
+.opt.wrong{border-color:var(--bad);background:#f851491a}
+input.fill{width:100%;background:var(--code);color:var(--fg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-family:var(--mono);font-size:14px}
+.expl{margin-top:12px;padding:10px 14px;border-radius:8px;background:var(--panel2);border-left:3px solid var(--accent)}
+.bar{height:6px;background:var(--panel2);border-radius:9px;overflow:hidden;margin:8px 0}
+.bar>i{display:block;height:100%;background:var(--accent);transition:width .3s}
+/* Oefenen */
+#lab{display:none;grid-template-columns:200px minmax(340px,1fr) minmax(380px,1.1fr);height:100%}
+#lab.on{display:grid}
+#lab.termwide{grid-template-columns:200px minmax(300px,.7fr) minmax(500px,1.5fr)}
+#exlist{border-right:1px solid var(--border);overflow:auto;background:var(--panel);padding:8px}
+#exlist button{display:block;width:100%;text-align:left;background:none;border:0;color:var(--fg);padding:6px 8px;border-radius:7px;cursor:pointer;font:inherit;font-size:13.5px}
+#exlist button.on{background:var(--panel2);color:var(--accent)}
+#exlist .d{float:right;color:var(--ok)}
+#expane{overflow:auto;padding:12px 16px;border-right:1px solid var(--border)}
+#expane h1{font-size:20px;margin-top:4px}
+.ftabs{display:flex;gap:4px;flex-wrap:wrap;margin-top:14px}
+.ftabs button{font-family:var(--mono);font-size:12.5px;background:var(--panel2);border:1px solid var(--border);border-bottom:0;color:var(--muted);border-radius:7px 7px 0 0;padding:5px 10px;cursor:pointer}
+.ftabs button.on{color:var(--fg);background:var(--code)}
+textarea#ed{width:100%;min-height:260px;background:var(--code);color:#e6edf3;border:1px solid var(--border);border-radius:0 8px 8px 8px;padding:10px;font-family:var(--mono);font-size:13.5px;line-height:1.5;resize:vertical;tab-size:2;white-space:pre}
+#checkout{white-space:pre-wrap;font-family:var(--mono);font-size:13px;background:var(--code);border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:10px;display:none}
+#checkout .g{color:var(--ok)} #checkout .r{color:var(--bad)}
+#sol{display:none}
+#termwrap{display:flex;flex-direction:column;min-width:0}
+#termbar{display:flex;gap:6px;padding:6px 8px;border-bottom:1px solid var(--border);background:var(--panel);align-items:center;flex-wrap:wrap}
+#term{flex:1;border:0;width:100%;background:#0d1117}
+.chips{display:flex;gap:5px;flex-wrap:wrap}
+.chips button{font-family:var(--mono);font-size:12px;background:var(--panel2);border:1px solid var(--border);color:var(--fg);padding:3px 8px;border-radius:6px;cursor:pointer}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--panel2);border:1px solid var(--border);padding:8px 16px;border-radius:9px;display:none;z-index:9}
+@media (max-width:900px){#learn.on,#lab.on{display:block;overflow:auto}#toc,#exlist{border:0}#term{height:70vh}}
+</style>
+</head>
+<body>
+<header>
+  <h1>🐳 CS2 <span>Docker</span></h1>
+  <nav class="row">
+    <button data-s="learn" class="on">📖 Leren</button>
+    <button data-s="cards">🃏 Flashcards</button>
+    <button data-s="quiz">✅ Quiz</button>
+    <button data-s="lab">💻 Oefenen</button>
+    <button data-s="cheat">📋 Cheat sheet</button>
+  </nav>
+  <div id="prog"></div>
+</header>
+<main>
+<section id="learn" class="on"><div id="toc"></div><div id="chap"><div class="wrap" id="chapbody"></div></div></section>
+<section id="cards"><div class="wrap" id="cardsbody"></div></section>
+<section id="quiz"><div class="wrap" id="quizbody"></div></section>
+<section id="lab">
+  <div id="exlist"></div>
+  <div id="expane"></div>
+  <div id="termwrap">
+    <div id="termbar">
+      <b style="font-size:13px">Terminal</b><span class="muted" style="font-size:12px">sandbox · eigen Docker-daemon</span>
+      <span style="margin-left:auto" class="row">
+        <button class="btn small" onclick="document.getElementById('lab').classList.toggle('termwide')">↔ breder</button>
+        <button class="btn small" onclick="reloadTerm()">⟳ nieuwe shell</button>
+        <button class="btn small" onclick="resetSandbox()">🧹 sandbox leegmaken</button>
+      </span>
+    </div>
+    <iframe id="term" src="/term/"></iframe>
+  </div>
+</section>
+<section id="cheat"><div class="wrap" id="cheatbody"></div></section>
+</main>
+<div class="toast" id="toast"></div>
+
+<script>
+// ------------------------------------------------------------------ helpers
+const $ = s => document.querySelector(s);
+const store = {get(k,d){try{return JSON.parse(localStorage.getItem('cs2.'+k))??d}catch{return d}},set(k,v){try{localStorage.setItem('cs2.'+k,JSON.stringify(v))}catch{}}};
+const md = s => marked.parse(s);
+function toast(t){const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',2200)}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>show(b.dataset.s));
+function show(s){document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.s===s));document.querySelectorAll('section').forEach(x=>x.classList.toggle('on',x.id===s));store.set('tab',s);if(s==='lab')loadLab()}
+
+// ------------------------------------------------------------------ theorie
+const CH = [
+{t:'1 · Introductie & concepten', b:`
+## Waarom containers?
+"It works on my machine" — een container verpakt een applicatie **met al zijn afhankelijkheden** (libraries, runtime, config) zodat hij overal hetzelfde draait: laptop, server, cloud. Solomon Hykes stelde Docker voor in 2013 (PyCon) — de metafoor is de **zeecontainer**: één standaardformaat, ongeacht de inhoud.
+
+## Container vs Virtuele Machine
+| | Virtuele Machine | Container |
+|---|---|---|
+| Virtualiseert | **hardware** (hypervisor) | het **besturingssysteem** |
+| Eigen kernel | ja, volledig gast-OS | nee, **deelt de host-kernel** |
+| Grootte | GB's | MB's |
+| Opstarten | minuten | (milli)seconden |
+| Isolatie | sterk | lichter (proces-niveau) |
+| Dichtheid | tientallen per host | honderden per host |
+
+> Een container is in essentie gewoon een **geïsoleerd proces** op de host. Daarom kan je geen Windows-container op een Linux-kernel draaien (Docker Desktop op Windows/Mac gebruikt daarvoor een kleine Linux-VM).
+
+## Linux-technologieën onder de motorkap
+- **Namespaces** → *isolatie* (wat een proces kan **zien**): \`pid\` (eigen proceslijst, je app is PID 1), \`net\` (eigen netwerkstack), \`mnt\` (eigen bestandssysteem), \`uts\` (eigen hostname), \`ipc\`, \`user\` (eigen UID-mapping).
+- **Control groups (cgroups)** → *resource-beperking* (hoeveel een proces mag **gebruiken**): CPU, geheugen, I/O. Bv. \`docker run --memory 256m --cpus 0.5\`.
+- **Union filesystem (OverlayFS)** → een image bestaat uit **read-only layers** op elkaar gestapeld; een container voegt één dunne **read-write layer** toe (copy-on-write).
+
+## Kernbegrippen
+- **Image**: read-only sjabloon (bestandssysteem + metadata zoals CMD, ENV, poorten). Opgebouwd uit layers. Vergelijk: een *klasse*.
+- **Container**: een draaiende (of gestopte) **instantie** van een image, met een eigen schrijflaag. Vergelijk: een *object*. Eén image → veel containers.
+- **Registry**: opslagplaats voor images (Docker Hub, GitHub Container Registry, Google Artifact Registry, zelf gehost \`registry:2\`). Een **repository** bevat alle tags van één image.
+- **Tag**: label voor een versie, bv. \`nginx:1.27-alpine\`. Geen tag = \`latest\` (betekent *niet* automatisch "nieuwste"!).
+- **Dockerfile**: recept om een image te bouwen.
+
+## Architectuur
+Docker is **client-server**:
+- **Docker client** (\`docker\` CLI) — stuurt commando's via een REST-API
+- **Docker daemon** (\`dockerd\`) — bouwt, draait en beheert containers; praat met **containerd** → **runc** (OCI-runtime die effectief namespaces/cgroups opzet)
+- Communicatie via de Unix-socket \`/var/run/docker.sock\`
+- **OCI** (Open Container Initiative): open standaard voor image-formaat en runtime → images werken ook in Podman, Kubernetes, ...
+
+## Wat gebeurt er bij \`docker run hello-world\`?
+1. De client vraagt de daemon de container te starten
+2. Image niet lokaal? De daemon **pullt** ze van Docker Hub
+3. De daemon **maakt een container** en start het programma
+4. De output wordt naar de client gestreamd. Programma klaar → container **Exited**
+`},
+{t:'2 · Docker CLI', b:`
+## Levenscyclus
+\`created → running → paused → stopped (exited) → removed\`
+
+| Commando | Doet |
+|---|---|
+| \`docker run [opties] IMAGE [CMD]\` | pull + create + start |
+| \`docker create\` / \`docker start\` | enkel aanmaken / starten |
+| \`docker stop\` | SIGTERM, na 10 s SIGKILL |
+| \`docker kill\` | onmiddellijk SIGKILL |
+| \`docker restart\`, \`pause\`, \`unpause\` | |
+| \`docker rm [-f]\` | container verwijderen (\`-f\` = ook als hij draait) |
+| \`docker ps\` / \`docker ps -a\` | draaiende / alle containers |
+| \`docker logs [-f] [--tail 20]\` | stdout/stderr van de container |
+| \`docker exec -it NAAM sh\` | extra proces (shell) in **draaiende** container |
+| \`docker attach\` | koppel aan het hoofdproces (PID 1) |
+| \`docker inspect\` | alle details als JSON (\`-f '{{.State.Status}}'\`) |
+| \`docker stats\` / \`top\` | resource-gebruik / processen |
+| \`docker cp\` | bestanden kopiëren host ↔ container |
+
+## Belangrijke \`run\`-opties
+| Optie | Betekenis |
+|---|---|
+| \`-d\` | detached (achtergrond) |
+| \`-it\` | interactief + terminal (\`-i\` stdin open, \`-t\` TTY) |
+| \`--name web\` | naam geven (anders random, bv. \`happy_turing\`) |
+| \`--rm\` | container automatisch verwijderen als hij stopt |
+| \`-p 8080:80\` | **host**poort 8080 → **container**poort 80 |
+| \`-P\` | alle EXPOSE-poorten op random hostpoorten |
+| \`-e KEY=val\` / \`--env-file f\` | environment-variabelen |
+| \`-v naam:/pad\` | named volume |
+| \`-v /host/pad:/pad[:ro]\` | bind mount |
+| \`--network net\` | netwerk kiezen |
+| \`--restart unless-stopped\` | restart policy (\`no\`, \`on-failure\`, \`always\`, \`unless-stopped\`) |
+| \`-w /app\`, \`-u 1000\` | werkmap, user |
+| \`--entrypoint\` | ENTRYPOINT overschrijven |
+
+## Images
+| | |
+|---|---|
+| \`docker pull nginx:alpine\` | downloaden |
+| \`docker images\` / \`docker image ls\` | lijst |
+| \`docker rmi IMAGE\` | verwijderen (eerst containers weg, of \`-f\`) |
+| \`docker tag SRC DEST\` | extra naam/tag (zelfde IMAGE ID!) |
+| \`docker commit CONTAINER img:tag\` | image maken van een container |
+| \`docker history IMG\` | layers bekijken |
+| \`docker save -o f.tar\` / \`load -i\` | image ↔ tar-bestand |
+| \`docker system prune [-a] [--volumes]\` | opkuisen |
+| \`docker system df\` | schijfgebruik |
+
+## Data: volumes, bind mounts, tmpfs
+Alles in de **schrijflaag** van een container verdwijnt met \`docker rm\`. Persistente data:
+| Type | Syntax | Beheerd door | Gebruik |
+|---|---|---|---|
+| **Named volume** | \`-v dbdata:/var/lib/mysql\` | Docker (\`/var/lib/docker/volumes/\`) | databases, persistente data |
+| **Anonymous volume** | \`-v /data\` | Docker, random naam | tijdelijk |
+| **Bind mount** | \`-v $(pwd)/site:/usr/share/nginx/html\` | jij (pad op host) | code delen tijdens development, config-bestanden |
+| **tmpfs** | \`--tmpfs /tmp\` | RAM | gevoelige/tijdelijke data |
+
+Commando's: \`docker volume create · ls · inspect · rm · prune\`. Een volume kan door **meerdere containers tegelijk** gedeeld worden. Lange syntax: \`--mount type=bind,source=/pad,target=/pad,readonly\`.
+
+## Netwerken
+| Driver | |
+|---|---|
+| \`bridge\` | standaard; privé-netwerk op de host (\`docker0\`, 172.17.0.0/16) met NAT |
+| **user-defined bridge** | \`docker network create mynet\` → **ingebouwde DNS**: containers vinden elkaar **op naam** |
+| \`host\` | geen netwerkisolatie; container gebruikt het netwerk van de host (\`-p\` heeft geen zin) |
+| \`none\` | geen netwerk |
+| \`overlay\` | over meerdere hosts (Swarm) |
+
+Commando's: \`docker network ls|create|inspect|connect|disconnect|rm\`. Basis-checks: \`docker exec c ping andere\`, \`ip a\`, \`cat /etc/resolv.conf\` (DNS 127.0.0.11 in user-defined networks).
+
+> ⚠️ Op de **default** bridge werkt naam-resolutie **niet**, enkel IP.
+`},
+{t:'3 · Docker Compose', b:`
+## Wat?
+Compose definieert een **multi-container applicatie** declaratief in één YAML-bestand (\`compose.yaml\`, vroeger \`docker-compose.yml\`). In plaats van 5 lange \`docker run\`-commando's: één \`docker compose up\`.
+
+## Structuur
+\`\`\`yaml
+services:            # de containers
+  web:
+    build: .                 # of: image: nginx:alpine
+    ports:
+      - "8080:80"
+    environment:
+      - DB_HOST=db           # of map-vorm  DB_HOST: db
+    env_file: .env
+    volumes:
+      - ./src:/app           # bind mount (pad begint met . of /)
+      - webdata:/data        # named volume
+    depends_on:
+      - db
+    networks: [front, back]
+    restart: unless-stopped
+  db:
+    image: mariadb:11
+    environment:
+      MARIADB_ROOT_PASSWORD: geheim
+    volumes:
+      - dbdata:/var/lib/mysql
+    networks: [back]
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect"]
+      interval: 10s
+
+volumes:             # named volumes declareren
+  webdata:
+  dbdata:
+
+networks:            # optioneel, anders 1 default netwerk
+  front:
+  back:
+\`\`\`
+
+## YAML-regels
+- **Spaties**, geen tabs! Inspringing bepaalt de structuur
+- \`key: value\` (spatie na de dubbele punt), lijsten met \`- \`
+- Poorten tussen **aanhalingstekens** (\`"8080:80"\`) — anders kan YAML \`xx:yy\` als getal in grondtal 60 lezen
+- Commentaar met \`#\`
+
+## Wat doet Compose automatisch?
+- Een **project** (naam = mapnaam, of \`-p\` / \`name:\`)
+- Een netwerk \`<project>_default\` waarop alle services zitten → **servicenaam = DNS-naam** (\`db\`, \`redis\`)
+- Containernamen \`<project>-<service>-1\`
+- Volumes \`<project>_<volume>\`
+
+## Commando's
+| | |
+|---|---|
+| \`docker compose up -d\` | alles aanmaken en starten (detached) |
+| \`docker compose up -d --build\` | eerst images (her)bouwen |
+| \`docker compose down\` | containers + netwerk verwijderen |
+| \`docker compose down -v\` | **ook volumes** (data weg!) |
+| \`docker compose ps\` / \`logs -f [svc]\` | status / logs |
+| \`docker compose exec db bash\` | shell in service |
+| \`docker compose stop\` / \`start\` / \`restart\` | |
+| \`docker compose pull\` / \`build\` | |
+| \`docker compose up -d --scale web=3\` | meerdere instanties (geen vaste hostpoort dan!) |
+| \`docker compose config\` | valideren + uitgewerkte config tonen |
+
+## depends_on
+Regelt enkel de **startvolgorde**. Wachten tot de db echt klaar is → healthcheck + \`depends_on: db: condition: service_healthy\`.
+
+## Load balancer-voorbeeld (lab extra)
+Meerdere \`web\`-replica's achter een **nginx** die als *reverse proxy* \`proxy_pass http://web:80;\` doet. Docker-DNS geeft voor \`web\` alle IP's terug (round-robin). Delen ze een named volume, dan tonen ze dezelfde inhoud.
+
+## Bekende labs
+WordPress + MariaDB · Nextcloud · Immich · Forgejo (self-hosted git) · nginx reverse proxy · load balancer.
+`},
+{t:'4 · Images bouwen (Dockerfile)', b:`
+## Instructies
+| Instructie | Betekenis |
+|---|---|
+| \`FROM image:tag [AS naam]\` | base image (verplicht, eerste instructie; \`scratch\` = leeg) |
+| \`WORKDIR /app\` | werkmap (wordt aangemaakt); geldt voor RUN/CMD/COPY |
+| \`COPY src dest\` | bestanden uit de **build context** kopiëren |
+| \`ADD src dest\` | als COPY + URL's en automatisch tar uitpakken → **liever COPY** |
+| \`RUN cmd\` | commando uitvoeren **tijdens het bouwen** → nieuwe layer |
+| \`ENV KEY=val\` | env-variabele, ook beschikbaar **at runtime** |
+| \`ARG KEY=def\` | variabele **enkel tijdens build** (\`--build-arg KEY=x\`) |
+| \`EXPOSE 80\` | **documentatie** welke poort de app gebruikt (publiceert niets!) |
+| \`USER app\` | volgende instructies + container draaien als deze user |
+| \`VOLUME /data\` | mountpoint markeren (anoniem volume bij run) |
+| \`LABEL key=val\` | metadata |
+| \`CMD [...]\` | **standaard** commando/argumenten bij start (overschrijfbaar) |
+| \`ENTRYPOINT [...]\` | het **vaste** uitvoerbare programma |
+| \`HEALTHCHECK CMD curl -f http://localhost/ \\|\\| exit 1\` | gezondheidscontrole |
+
+## Bouwen
+\`\`\`bash
+docker build -t naam:tag .          # . = build context (map die naar de daemon gaat)
+docker build -t app -f Dockerfile.prod .
+docker build --no-cache -t app .
+\`\`\`
+\`.dockerignore\` sluit bestanden uit de context uit (\`node_modules\`, \`.git\`, \`bin/ obj/\`, secrets) → sneller en veiliger.
+
+## Layers & cache
+- Elke \`RUN\`, \`COPY\`, \`ADD\` maakt een **layer**. Andere instructies (ENV, CMD, EXPOSE...) enkel metadata.
+- Docker hergebruikt een layer uit de **cache** zolang de instructie én (bij COPY) de bestanden niet gewijzigd zijn. **Wijzigt één layer, dan worden alle volgende layers opnieuw gebouwd.**
+- ⇒ Zet wat **zelden wijzigt bovenaan**: eerst \`COPY package.json\` + \`RUN npm install\`, pas daarna \`COPY . .\`.
+- Combineer RUN-commando's en ruim op in **dezelfde** layer:
+  \`RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*\`
+  (verwijderen in een latere layer maakt de image niet kleiner!)
+
+## CMD vs ENTRYPOINT
+\`\`\`dockerfile
+ENTRYPOINT ["ping", "-c", "3"]
+CMD ["localhost"]
+\`\`\`
+- \`docker run img\` → \`ping -c 3 localhost\`
+- \`docker run img 8.8.8.8\` → \`ping -c 3 8.8.8.8\` (argumenten **vervangen CMD**)
+- \`docker run --entrypoint sh img\` → entrypoint overschrijven
+- Enkel CMD → \`docker run img ls\` vervangt het hele commando
+- Meerdere CMD's → enkel de **laatste** telt
+
+**Exec-vorm** \`["prog","arg"]\` (aanbevolen): geen shell, je proces is **PID 1** en krijgt SIGTERM bij \`docker stop\`.
+**Shell-vorm** \`prog arg\`: draait als \`/bin/sh -c "prog arg"\` → variabele-expansie, maar signalen bereiken je app niet.
+
+## Security: niet als root
+Standaard draait een container als **root**. Beter:
+\`\`\`dockerfile
+RUN addgroup -S app && adduser -S app -G app     # alpine
+# debian: RUN useradd -m app
+USER app
+\`\`\`
+Officiële images hebben vaak al een user (\`node\` in node-images, \`nginx\` in nginx). Een niet-root user kan **geen poorten < 1024** openen → *No root for nginx*-lab: luister op 8080, gebruik \`nginxinc/nginx-unprivileged\` of pas de config aan.
+
+## Voorbeeld node.js
+\`\`\`dockerfile
+FROM node:22-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+EXPOSE 3000
+USER node
+CMD ["node", "app.js"]
+\`\`\`
+
+## Voorbeeld Python/Flask
+\`\`\`dockerfile
+FROM python:3.12-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+CMD ["flask", "run", "--host=0.0.0.0"]
+\`\`\`
+> In een container moet je app luisteren op **0.0.0.0**, niet op 127.0.0.1 (dat is de container zelf).
+`},
+{t:'5 · Multi-stage builds', b:`
+## Probleem
+Om te **bouwen** heb je een SDK/compiler nodig (golang ~800 MB, dotnet/sdk ~800 MB, node + devDependencies). Om te **draaien** enkel het resultaat. Alles in één image = groot, traag, en meer aanvalsoppervlak.
+
+## Oplossing: meerdere \`FROM\`'s in één Dockerfile
+\`\`\`dockerfile
+# ---- stage 1: build ----
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+COPY *.csproj ./
+RUN dotnet restore              # aparte layer → cache!
+COPY . .
+RUN dotnet publish -c Release -o /app/publish
+
+# ---- stage 2: runtime ----
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
+WORKDIR /app
+COPY --from=build /app/publish .
+EXPOSE 8080
+ENTRYPOINT ["dotnet", "MijnApp.dll"]
+\`\`\`
+- Elke \`FROM\` start een nieuwe **stage**; geef ze een naam met \`AS\`
+- \`COPY --from=build\` haalt bestanden uit een eerdere stage (of uit een image: \`COPY --from=nginx:alpine /etc/nginx/nginx.conf .\`)
+- **Enkel de laatste stage** komt in de uiteindelijke image
+- \`docker build --target build .\` → stop bij een bepaalde stage (bv. voor tests)
+
+## Voorbeelden van runtime-images
+| Taal | build-stage | runtime-stage |
+|---|---|---|
+| .NET | \`dotnet/sdk\` | \`dotnet/aspnet\` (web) of \`dotnet/runtime\` |
+| Go | \`golang\` | \`alpine\`, \`distroless\` of zelfs \`scratch\` (statische binary) |
+| Java | \`maven\` / \`gradle\` | \`eclipse-temurin:21-jre\` |
+| Node (React/Vue) | \`node\` → \`npm run build\` | \`nginx:alpine\` met de \`dist/\` map |
+| Python | \`python\` (wheels bouwen) | \`python:slim\` |
+
+## Voordelen
+✔ veel kleinere image · ✔ geen broncode/compiler/secrets in productie-image · ✔ één Dockerfile voor build én run (geen aparte build-scripts) · ✔ betere caching
+`},
+{t:'6 · Images publiceren', b:`
+## Naamgeving
+\`\`\`
+[registry-host[:poort]/][namespace/]repository[:tag]
+nginx                          → docker.io/library/nginx:latest
+jouwnaam/myapp:1.0              → docker.io/jouwnaam/myapp:1.0
+localhost:5000/myapp:1.0       → lokale registry
+europe-west1-docker.pkg.dev/project-id/repo/myapp:1.0   → Google Artifact Registry
+ghcr.io/user/myapp:1.0         → GitHub
+\`\`\`
+Push gaat naar de registry die **in de naam** staat → je moet eerst **taggen**.
+
+## Docker Hub
+\`\`\`bash
+docker login                      # gebruikersnaam + access token
+docker tag myapp:1.0 jouwnaam/myapp:1.0
+docker push jouwnaam/myapp:1.0
+docker pull jouwnaam/myapp:1.0
+docker logout
+\`\`\`
+Public repo's: iedereen kan pullen; private: enkel na login. Credentials komen in \`~/.docker/config.json\`.
+
+## Lokale registry
+\`\`\`bash
+docker run -d -p 5000:5000 --name registry registry:2
+docker tag myapp:1.0 localhost:5000/myapp:1.0
+docker push localhost:5000/myapp:1.0
+curl localhost:5000/v2/_catalog                 # repository-lijst (Registry HTTP API v2)
+curl localhost:5000/v2/myapp/tags/list
+\`\`\`
+Vanaf een ander toestel zonder HTTPS → \`insecure-registries\` in \`/etc/docker/daemon.json\`.
+
+## Google Cloud — Artifact Registry
+\`\`\`bash
+gcloud auth login
+gcloud config set project PROJECT_ID
+gcloud artifacts repositories create myrepo --repository-format=docker --location=europe-west1
+gcloud auth configure-docker europe-west1-docker.pkg.dev
+docker tag myapp:1.0 europe-west1-docker.pkg.dev/PROJECT_ID/myrepo/myapp:1.0
+docker push europe-west1-docker.pkg.dev/PROJECT_ID/myrepo/myapp:1.0
+\`\`\`
+> ⚠️ Bouw je op een Mac met Apple-chip (arm64) voor de cloud (amd64): \`docker build --platform linux/amd64\`.
+
+## Tag-strategie
+Gebruik **vaste versies** (\`1.4.2\`, git-sha) voor productie; \`latest\` is gewoon een tag zoals een andere en wordt niet automatisch bijgewerkt.
+`},
+{t:'7 · Serverless containers (Cloud Run)', b:`
+## Wat is serverless?
+Je levert enkel een **container image**; de cloudprovider regelt servers, schaling, TLS, load balancing. **Google Cloud Run** = fully managed, serverless container-platform (gebaseerd op **Knative**).
+
+## Kenmerken
+- **Schaalt automatisch** op basis van requests, ook **naar nul** (geen verkeer = geen kosten)
+- **Betalen per gebruik** (CPU/geheugen tijdens requests), gratis tier
+- **Stateless**: geen lokale persistente opslag → data in een database / Cloud Storage
+- Container moet luisteren op de poort uit de env-variabele **\`PORT\`** (standaard **8080**) en op **0.0.0.0**
+- Elke service krijgt een **HTTPS-URL** (\`https://service-xxxx.run.app\`)
+- **Cold start**: eerste request na schaal-naar-nul is trager (min-instances > 0 voorkomt dit)
+- **Concurrency**: meerdere requests per instantie (standaard 80)
+- Revisies: elke deploy = nieuwe **revision**, verkeer kan gesplitst worden
+
+## Deployen
+Via de **Console**: Cloud Run → Create service → image-URL kiezen (bv. \`us-docker.pkg.dev/cloudrun/container/hello\`), regio, *Allow unauthenticated*, poort.
+
+Via **gcloud**:
+\`\`\`bash
+gcloud run deploy hello \\
+  --image europe-west1-docker.pkg.dev/PROJECT/repo/hello:1.0 \\
+  --region europe-west1 \\
+  --allow-unauthenticated \\
+  --port 8080
+gcloud run services list
+gcloud run services delete hello --region europe-west1
+\`\`\`
+Of direct vanuit broncode: \`gcloud run deploy --source .\` (Cloud Build bouwt de image).
+
+## Serverless vs eigen VM met Docker
+| | Cloud Run | VM + Docker |
+|---|---|---|
+| Beheer | geen servers | OS, updates, Docker zelf |
+| Schaling | automatisch, tot 0 | manueel |
+| Kosten | per request | per uur dat VM draait |
+| State | stateless | volumes mogelijk |
+| Geschikt | web-API's, microservices | databases, langlopende processen |
+
+Labs: hello-world container, **httpbin**, een backend-API voor een **Android-app**.
+`}
+];
+function renderLearn(){
+  const done = store.get('read',{});
+  $('#toc').innerHTML = CH.map((c,i)=>`<button data-i="${i}">${c.t}<span class="d">${done[i]?'✔':''}</span></button>`).join('');
+  $('#toc').querySelectorAll('button').forEach(b=>b.onclick=()=>openChap(+b.dataset.i));
+  openChap(store.get('chap',0));
+}
+function openChap(i){
+  store.set('chap',i);
+  $('#toc').querySelectorAll('button').forEach(b=>b.classList.toggle('on',+b.dataset.i===i));
+  const done = store.get('read',{});
+  $('#chapbody').innerHTML = `<h1>${CH[i].t}</h1>`+md(CH[i].b)+
+    `<div class="row" style="margin-top:30px"><button class="btn ${done[i]?'':'ok'}" id="mr">${done[i]?'✔ Gelezen':'Markeer als gelezen'}</button>
+     <button class="btn" onclick="quizChapter(${i})">✅ Quiz over dit hoofdstuk</button>
+     ${i<CH.length-1?`<button class="btn primary" onclick="openChap(${i+1})">Volgende →</button>`:''}</div>`;
+  $('#mr').onclick=()=>{const d=store.get('read',{});d[i]=!d[i];store.set('read',d);renderLearn();openChap(i);updProg()};
+  $('#chap').scrollTop=0;
+}
+
+// ------------------------------------------------------------------ flashcards
+const FC = [
+[1,'Container vs VM: wat virtualiseert een container?','Het **besturingssysteem** (deelt de host-kernel). Een VM virtualiseert de **hardware** en heeft een eigen kernel.'],
+[1,'Welke Linux-feature zorgt voor **isolatie** (wat een proces ziet)?','**Namespaces** (pid, net, mnt, uts, ipc, user)'],
+[1,'Welke Linux-feature **beperkt resources** (CPU, RAM)?','**cgroups** (control groups)'],
+[1,'Hoe zijn images opgebouwd?','Uit gestapelde **read-only layers** (union filesystem / OverlayFS). Een container voegt één **read-write** layer toe (copy-on-write).'],
+[1,'Image vs container?','Image = read-only **sjabloon** (klasse). Container = draaiende **instantie** met eigen schrijflaag (object).'],
+[1,'Wat is een registry? Voorbeelden?','Opslag voor images. Docker Hub, GHCR, Google Artifact Registry, zelf: `registry:2`.'],
+[1,'Welke tag gebruikt Docker als je er geen opgeeft?','`latest` — een gewone tag, **niet** automatisch de nieuwste.'],
+[1,'Docker-architectuur?','**Client** (`docker` CLI) → REST API via `/var/run/docker.sock` → **daemon** (`dockerd`) → containerd → runc'],
+[1,'Wat is OCI?','Open Container Initiative: open standaard voor image-formaat en runtime.'],
+[2,'Container op de achtergrond met naam web, poort 8080→80','`docker run -d --name web -p 8080:80 nginx`'],
+[2,'Volgorde bij `-p`?','`-p HOST:CONTAINER`'],
+[2,'Alle containers tonen, ook gestopte','`docker ps -a`'],
+[2,'Shell openen in een draaiende container','`docker exec -it NAAM sh` (of bash)'],
+[2,'Logs live volgen','`docker logs -f NAAM`'],
+[2,'Verschil `docker stop` en `docker kill`?','stop = SIGTERM, na 10 s SIGKILL. kill = direct SIGKILL.'],
+[2,'Wat doet `--rm`?','Container wordt automatisch verwijderd als hij stopt.'],
+[2,'Wat doet `docker commit`?','Maakt een nieuwe image van de huidige toestand van een container.'],
+[2,'Wat doet `docker tag`?','Geeft een image een **extra naam**. Zelfde IMAGE ID, niets gekopieerd.'],
+[2,'Named volume vs bind mount?','Volume: beheerd door Docker in `/var/lib/docker/volumes`. Bind mount: willekeurig **host-pad** (`-v $(pwd)/x:/x`).'],
+[2,'Read-only mount','`-v pad:/doel:ro`'],
+[2,'Waarom een user-defined network i.p.v. de default bridge?','Ingebouwde **DNS**: containers bereiken elkaar **op naam**. Plus betere isolatie.'],
+[2,'Netwerk-drivers?','`bridge` (standaard), `host` (geen isolatie), `none`, `overlay` (multi-host)'],
+[2,'Draaiende container aan een netwerk koppelen','`docker network connect NET CONTAINER`'],
+[2,'Alles ongebruikt opruimen incl. images en volumes','`docker system prune -a --volumes`'],
+[2,'Env-variabele meegeven','`-e KEY=waarde` of `--env-file .env`'],
+[3,'Wat is Docker Compose?','Multi-container app declaratief beschrijven in **YAML** (`compose.yaml`) en beheren met `docker compose`.'],
+[3,'Compose starten op de achtergrond, met rebuild','`docker compose up -d --build`'],
+[3,'Verschil `down` en `down -v`?','`-v` verwijdert óók de **named volumes** → data weg.'],
+[3,'Hoe vinden compose-services elkaar?','Via het automatische `<project>_default` netwerk: **servicenaam = hostnaam**.'],
+[3,'Wat garandeert `depends_on`?','Alleen **startvolgorde**. Voor "ready": healthcheck + `condition: service_healthy`.'],
+[3,'Tabs in YAML?','**Nooit.** Enkel spaties. Poorten tussen quotes: `"8080:80"`.'],
+[3,'Compose-bestand valideren','`docker compose config`'],
+[4,'Verschil COPY en ADD?','ADD kan ook URL\'s en pakt tar\'s uit. Gebruik **COPY** tenzij je dat nodig hebt.'],
+[4,'Verschil ENV en ARG?','ARG enkel **tijdens build** (`--build-arg`), ENV ook **at runtime** in de container.'],
+[4,'Publiceert EXPOSE een poort?','**Nee**, enkel documentatie. Publiceren doe je met `-p` (of `-P`).'],
+[4,'Verschil RUN en CMD?','RUN: tijdens het **bouwen** (nieuwe layer). CMD: bij het **starten** van de container.'],
+[4,'CMD vs ENTRYPOINT?','ENTRYPOINT = vast programma. CMD = standaard argumenten, worden **vervangen** door argumenten na `docker run img ...`'],
+[4,'Exec-vorm vs shell-vorm?','Exec `["a","b"]`: proces = PID 1, krijgt signalen. Shell `a b`: via `/bin/sh -c`, variabele-expansie, signalen komen niet aan.'],
+[4,'Waarom eerst `COPY package.json` en `RUN npm install` en pas dan `COPY . .`?','**Layer cache**: de dure install-layer wordt hergebruikt zolang de dependencies niet wijzigen.'],
+[4,'Waarom niet als root draaien?','Security: een uitbraak uit de container geeft root. Gebruik `USER`.'],
+[4,'Wat doet `.dockerignore`?','Bestanden uitsluiten uit de **build context** (node_modules, .git, secrets).'],
+[4,'Wat is de build context?','De map (meestal `.`) die bij `docker build` naar de daemon gestuurd wordt; COPY kan enkel daaruit.'],
+[4,'Waarom luisteren op 0.0.0.0?','127.0.0.1 is de loopback van de **container zelf**; gepubliceerd verkeer komt op de netwerkinterface binnen.'],
+[5,'Wat is een multi-stage build?','Meerdere `FROM`\'s; bouwen in een SDK-stage, enkel het resultaat kopiëren naar een kleine runtime-stage met `COPY --from=`.'],
+[5,'Bestand uit vorige stage kopiëren','`COPY --from=build /app/publish .`'],
+[5,'.NET build- en runtime-image?','`mcr.microsoft.com/dotnet/sdk` → `mcr.microsoft.com/dotnet/aspnet`'],
+[5,'Enkel tot een bepaalde stage bouwen','`docker build --target build .`'],
+[6,'Image pushen naar Docker Hub','`docker login` → `docker tag app:1.0 user/app:1.0` → `docker push user/app:1.0`'],
+[6,'Lokale registry starten','`docker run -d -p 5000:5000 --name registry registry:2`'],
+[6,'Repositories in registry bekijken','`curl localhost:5000/v2/_catalog`'],
+[6,'Docker koppelen aan Google Artifact Registry','`gcloud auth configure-docker REGION-docker.pkg.dev`'],
+[7,'Wat is Cloud Run?','Fully managed **serverless** platform om containers te draaien; schaalt automatisch (tot 0), betalen per gebruik.'],
+[7,'Op welke poort moet een Cloud Run-container luisteren?','De poort uit env-variabele **PORT** (standaard **8080**), op 0.0.0.0.'],
+[7,'Wat is een cold start?','Vertraging bij de eerste request als er 0 instanties draaien. Oplossing: min-instances.'],
+[7,'Deployen met gcloud','`gcloud run deploy NAAM --image IMG --region europe-west1 --allow-unauthenticated`'],
+[7,'Waarom moet een Cloud Run-service stateless zijn?','Instanties komen en gaan (schaling); lokale data gaat verloren → gebruik een database/storage.'],
+];
+let fcDeck=[], fcI=0;
+function renderCards(){
+  const known = store.get('known',{});
+  const chs=[...new Set(FC.map(f=>f[0]))];
+  $('#cardsbody').innerHTML=`<h1>Flashcards</h1>
+  <div class="row"><span class="muted">Hoofdstuk:</span><button class="btn small" onclick="startCards(0)">Alles</button>${chs.map(c=>`<button class="btn small" onclick="startCards(${c})">${c}</button>`).join('')}
+  <button class="btn small" onclick="startCards(-1)">Enkel nog niet gekend</button>
+  <span class="muted" style="margin-left:auto">${Object.values(known).filter(Boolean).length}/${FC.length} gekend</span></div>
+  <div id="fcarea"></div>`;
+  startCards(store.get('fcch',0));
+}
+function startCards(ch){
+  store.set('fcch',ch);
+  const known=store.get('known',{});
+  fcDeck=FC.map((f,i)=>i).filter(i=>ch===0||ch===FC[i][0]||(ch===-1&&!known[i])).sort(()=>Math.random()-.5);
+  fcI=0;drawCard();
+}
+function drawCard(){
+  const a=$('#fcarea');
+  if(!fcDeck.length||fcI>=fcDeck.length){a.innerHTML=`<div class="card"><h2>🎉 Stapel klaar!</h2><p>Kies hierboven een nieuwe stapel, of "Enkel nog niet gekend".</p></div>`;renderProgOnly();return}
+  const i=fcDeck[fcI],f=FC[i];
+  a.innerHTML=`<div class="bar"><i style="width:${fcI/fcDeck.length*100}%"></i></div><div class="muted">${fcI+1} / ${fcDeck.length} · klik of druk <b>spatie</b> om te draaien</div>
+  <div class="fc" id="fc"><div class="fc-in"><div class="fc-f"><span class="tag">${CH[f[0]-1].t}</span>${md(f[1])}</div><div class="fc-b">${md(f[2])}</div></div></div>
+  <div class="row" style="justify-content:center"><button class="btn" style="border-color:var(--bad)" onclick="rate(false)">✘ Nog niet (1)</button><button class="btn ok" onclick="rate(true)">✔ Gekend (2)</button></div>`;
+  $('#fc').onclick=()=>$('#fc').classList.toggle('flip');
+}
+function rate(k){const known=store.get('known',{});known[fcDeck[fcI]]=k;store.set('known',known);if(!k)fcDeck.push(fcDeck[fcI]);fcI++;drawCard();updProg()}
+document.addEventListener('keydown',e=>{
+  if(!$('#cards').classList.contains('on')||!$('#fc'))return;
+  if(e.code==='Space'){e.preventDefault();$('#fc').classList.toggle('flip')}
+  if(e.key==='1')rate(false); if(e.key==='2')rate(true);
+});
+
+// ------------------------------------------------------------------ quiz
+// type: m = meerkeuze (a = index juist), f = invullen (a = array van aanvaarde antwoorden, genormaliseerd)
+const Q = [
+{c:1,q:'Wat deelt een container met de host?',o:['De hardware-drivers niet, maar wel een eigen kernel','De kernel van het host-OS','Niets, hij is volledig geïsoleerd zoals een VM','Enkel het netwerk'],a:1,e:'Containers delen de host-kernel; daarom zijn ze licht en starten ze snel.'},
+{c:1,q:'Welke Linux-technologie beperkt hoeveel geheugen een container mag gebruiken?',o:['namespaces','cgroups','OverlayFS','chroot'],a:1,e:'cgroups = resource-limieten; namespaces = isolatie (wat je ziet).'},
+{c:1,q:'Dankzij welke namespace ziet een proces in een container zichzelf als PID 1?',o:['net','mnt','pid','uts'],a:2,e:'De pid-namespace geeft een eigen procesboom.'},
+{c:1,q:'Welke uitspraak over images is JUIST?',o:['Een image is schrijfbaar','Een image bestaat uit read-only layers','Elke container heeft een eigen kopie van alle layers','Een image bevat altijd een eigen kernel'],a:1,e:'Layers worden gedeeld tussen containers; elke container krijgt enkel een dunne read-write layer.'},
+{c:1,q:'Hoe communiceert de docker CLI standaard met de daemon?',o:['SSH','Via de Unix-socket /var/run/docker.sock (REST API)','Via poort 80','Via een gedeelde map'],a:1,e:''},
+{c:1,q:'Je runt `docker run nginx` en de image staat niet lokaal. Wat gebeurt er?',o:['Fout: image not found','De daemon pullt automatisch van de standaard-registry (Docker Hub)','Docker bouwt de image','Docker vraagt om een Dockerfile'],a:1,e:''},
+{c:1,q:'Waarom kan je op een Linux-host niet zomaar een Windows-container draaien?',o:['Licentieproblemen','Containers delen de kernel van de host','Windows ondersteunt geen namespaces','Docker Hub heeft geen Windows-images'],a:1,e:''},
+{c:2,q:'Geef het commando: start nginx op de achtergrond met de naam `web` en hostpoort 8080 naar containerpoort 80.',f:1,a:['docker run -d --name web -p 8080:80 nginx','docker run -d -p 8080:80 --name web nginx','docker run --name web -d -p 8080:80 nginx','docker run --name web -p 8080:80 -d nginx','docker run -p 8080:80 -d --name web nginx','docker run -p 8080:80 --name web -d nginx','docker container run -d --name web -p 8080:80 nginx'],e:'`-d` detached, `--name`, `-p HOST:CONTAINER`, image als laatste.'},
+{c:2,q:'Commando om **alle** containers te tonen, ook gestopte:',f:1,a:['docker ps -a','docker ps --all','docker container ls -a','docker container ls --all'],e:''},
+{c:2,q:'Open een interactieve shell `sh` in de draaiende container `api`:',f:1,a:['docker exec -it api sh','docker exec -ti api sh','docker exec -it api /bin/sh','docker container exec -it api sh'],e:''},
+{c:2,q:'Wat doet `docker run -p 3000:80 img`?',o:['Containerpoort 3000 wordt gekoppeld aan hostpoort 80','Hostpoort 3000 wordt doorgestuurd naar containerpoort 80','Poort 3000 tot 80 worden geopend','Enkel documentatie'],a:1,e:'Altijd HOST:CONTAINER.'},
+{c:2,q:'Je start `docker run ubuntu` (zonder opties). Wat zie je bij `docker ps`?',o:['Een draaiende ubuntu container','Niets: bash start zonder TTY en stopt meteen, de container is Exited','Een fout','Een interactieve shell'],a:1,e:'Zonder -it eindigt bash direct; een container leeft zo lang als zijn hoofdproces.'},
+{c:2,q:'Wat gebeurt met bestanden die je in een container schreef (zonder volume) na `docker rm`?',o:['Ze blijven in de image','Ze zijn weg','Ze worden in een volume bewaard','Ze worden naar de host gekopieerd'],a:1,e:'De read-write layer wordt verwijderd met de container.'},
+{c:2,q:'Wat is het resultaat van `docker tag nginx:alpine mijnweb:1.0`?',o:['Een kopie van de image met nieuwe ID','Een extra naam voor dezelfde image (zelfde IMAGE ID)','De image wordt hernoemd, nginx:alpine verdwijnt','De image wordt gepusht'],a:1,e:''},
+{c:2,q:'Welk type mount gebruik je om tijdens development je broncode live in de container te zien?',o:['Named volume','Bind mount','tmpfs','Anonymous volume'],a:1,e:''},
+{c:2,q:'Mount het named volume `dbdata` op `/var/lib/mysql` (enkel de optie):',f:1,a:['-v dbdata:/var/lib/mysql','--volume dbdata:/var/lib/mysql','--mount type=volume,source=dbdata,target=/var/lib/mysql','--mount source=dbdata,target=/var/lib/mysql'],e:''},
+{c:2,q:'Twee containers op de **default bridge**: `ping db` vanuit de andere faalt. Waarom?',o:['Ping is geblokkeerd in Docker','De default bridge heeft geen DNS-naamresolutie; gebruik een user-defined network','Je moet eerst een poort publiceren','Containers kunnen nooit met elkaar praten'],a:1,e:''},
+{c:2,q:'Maak een netwerk `backend`:',f:1,a:['docker network create backend','docker network create -d bridge backend','docker network create --driver bridge backend','docker network create --driver=bridge backend'],e:''},
+{c:2,q:'Met netwerkdriver `host`...',o:['krijgt de container een eigen IP','gebruikt de container direct de netwerkstack van de host; -p is overbodig','heeft de container geen netwerk','werkt over meerdere hosts'],a:1,e:''},
+{c:2,q:'Welk commando geeft SIGTERM en na een timeout SIGKILL?',o:['docker kill','docker stop','docker rm','docker pause'],a:1,e:''},
+{c:2,q:'Start een mariadb-container met env-variabele MARIADB_ROOT_PASSWORD=geheim (gedetached, image `mariadb`):',f:1,a:['docker run -d -e MARIADB_ROOT_PASSWORD=geheim mariadb','docker run -e MARIADB_ROOT_PASSWORD=geheim -d mariadb','docker run -d --env MARIADB_ROOT_PASSWORD=geheim mariadb','docker run --env MARIADB_ROOT_PASSWORD=geheim -d mariadb'],e:''},
+{c:2,q:'Waarom is `docker commit` minder goed dan een Dockerfile?',o:['Het is trager','Niet reproduceerbaar/gedocumenteerd: je weet niet hoe de image ontstond','Commit werkt niet met ubuntu','Commit maakt geen layers'],a:1,e:''},
+{c:3,q:'In welk formaat schrijf je een Compose-bestand?',o:['JSON','YAML','XML','TOML'],a:1,e:''},
+{c:3,q:'Hoe bereikt service `web` de database-service `db` in hetzelfde compose-project?',o:['Via localhost','Via hostnaam `db` (servicenaam)','Via het IP van de host','Enkel via gepubliceerde poorten'],a:1,e:''},
+{c:3,q:'Commando: start alle services detached en bouw images eerst opnieuw:',f:1,a:['docker compose up -d --build','docker compose up --build -d','docker-compose up -d --build','docker-compose up --build -d'],e:''},
+{c:3,q:'Je doet `docker compose down -v`. Wat gebeurt er met de MariaDB-data in een named volume?',o:['Blijft bewaard','Wordt verwijderd','Wordt gebackupt','Wordt naar een bind mount verplaatst'],a:1,e:''},
+{c:3,q:'Wat doet `depends_on: [db]`?',o:['Wacht tot de database queries aanvaardt','Start db vóór de service; garandeert niet dat db "ready" is','Verbindt automatisch de connection string','Maakt een volume'],a:1,e:''},
+{c:3,q:'Welke YAML-fout is het meest voorkomend?',o:['Tabs i.p.v. spaties / verkeerde inspringing','Hoofdletters in keys','Te veel services','Commentaar met #'],a:0,e:''},
+{c:3,q:'Hoe heet het netwerk dat Compose automatisch maakt voor project `shop`?',o:['bridge','shop_default','compose_net','default_shop'],a:1,e:''},
+{c:3,q:'In compose: `- ./html:/usr/share/nginx/html` is een...',o:['named volume','bind mount','tmpfs','netwerk'],a:1,e:'Een pad dat begint met . of / is een bind mount; een naam is een named volume.'},
+{c:3,q:'Hoe start je 3 instanties van service `web`?',f:1,a:['docker compose up -d --scale web=3','docker compose up --scale web=3 -d','docker compose up --scale web=3','docker compose scale web=3'],e:'Let op: dan kan je geen vaste hostpoort gebruiken; zet een load balancer (nginx) ervoor.'},
+{c:4,q:'Welke instructie publiceert poort 80 naar de host?',o:['EXPOSE 80','PORT 80','Geen enkele; dat doe je met -p bij docker run','PUBLISH 80'],a:2,e:''},
+{c:4,q:'Wanneer wordt `RUN` uitgevoerd?',o:['Bij elke docker run','Tijdens docker build','Bij docker push','Bij docker stop'],a:1,e:''},
+{c:4,q:'Dockerfile: `ENTRYPOINT ["echo"]` en `CMD ["hallo"]`. Output van `docker run img wereld`?',o:['hallo','wereld','hallo wereld','echo wereld'],a:1,e:'Argumenten vervangen CMD; ENTRYPOINT blijft: echo wereld → "wereld".'},
+{c:4,q:'Dockerfile: `CMD ["echo","hallo"]`. Wat doet `docker run img ls /`?',o:['echo hallo','ls / (CMD wordt volledig vervangen)','echo hallo ls /','fout'],a:1,e:''},
+{c:4,q:'Verschil ARG en ENV?',o:['Geen verschil','ARG enkel tijdens build, ENV ook at runtime','ENV enkel tijdens build','ARG wordt in de container opgeslagen'],a:1,e:''},
+{c:4,q:'Welke volgorde is best voor de build cache (Node)?',o:['COPY . . → RUN npm install','COPY package.json ./ → RUN npm install → COPY . .','RUN npm install → COPY . .','Volgorde maakt niet uit'],a:1,e:''},
+{c:4,q:'Je verwijdert in een aparte RUN-regel een groot bestand dat een vorige RUN downloadde. Wordt de image kleiner?',o:['Ja','Nee, het zit nog in de vorige layer','Enkel met --squash... standaard ja','Alleen op Alpine'],a:1,e:'Layers zijn additief; opruimen moet in dezelfde RUN.'},
+{c:4,q:'Bouw een image met naam `api` en tag `2.0` uit de huidige map:',f:1,a:['docker build -t api:2.0 .','docker build --tag api:2.0 .','docker image build -t api:2.0 .','docker buildx build -t api:2.0 .'],e:''},
+{c:4,q:'Waarvoor dient `.dockerignore`?',o:['Containers negeren bij prune','Bestanden uitsluiten uit de build context','Poorten blokkeren','Logs uitschakelen'],a:1,e:''},
+{c:4,q:'Waarom de exec-vorm `CMD ["node","app.js"]` i.p.v. `CMD node app.js`?',o:['Sneller bouwen','Het proces wordt PID 1 en ontvangt SIGTERM bij docker stop','Shell-vorm werkt niet','Kleinere image'],a:1,e:''},
+{c:4,q:'Een container als niet-root draait nginx op poort 80 en crasht. Waarom?',o:['nginx werkt niet als niet-root','Niet-root users mogen geen poorten < 1024 binden','Poort 80 is bezet door Docker','EXPOSE ontbreekt'],a:1,e:'Oplossing: luister op 8080 (bv. nginx-unprivileged).'},
+{c:4,q:'Welke instructie zet de werkmap voor volgende instructies?',f:1,a:['workdir'],e:'`WORKDIR /app`'},
+{c:4,q:'Welke instructie moet (bijna altijd) de eerste zijn in een Dockerfile?',f:1,a:['from'],e:''},
+{c:4,q:'Je Flask-app in de container luistert op 127.0.0.1:5000, je publiceert -p 5000:5000 maar krijgt geen antwoord. Oplossing?',o:['EXPOSE toevoegen','Luisteren op 0.0.0.0','--network host is verplicht','Poort 80 gebruiken'],a:1,e:''},
+{c:5,q:'Wat komt er in de uiteindelijke image bij een multi-stage build?',o:['Alle stages','Enkel de laatste stage (+ wat je erin kopieerde)','Enkel de eerste stage','De build-cache'],a:1,e:''},
+{c:5,q:'Kopieer `/app/publish` uit stage `build` naar de huidige map:',f:1,a:['copy --from=build /app/publish .','copy --from=build /app/publish ./'],e:''},
+{c:5,q:'Welke image gebruik je als runtime voor een ASP.NET MVC-app?',o:['mcr.microsoft.com/dotnet/sdk','mcr.microsoft.com/dotnet/aspnet','ubuntu','mcr.microsoft.com/dotnet/runtime-deps'],a:1,e:'sdk = bouwen, aspnet = runtime voor web-apps.'},
+{c:5,q:'Belangrijkste voordeel van multi-stage?',o:['Snellere containers at runtime','Kleinere en veiligere images zonder build-tools','Meer layers','Geen Dockerfile nodig'],a:1,e:''},
+{c:5,q:'Hoe bouw je enkel tot de stage `test`?',f:1,a:['docker build --target test .','docker build --target=test .','docker build -t x --target test .'],e:''},
+{c:6,q:'Wat moet je doen vóór `docker push jan/app:1.0` naar Docker Hub?',o:['Enkel docker login','docker login en de image taggen met je gebruikersnaam (jan/app:1.0)','Een Dockerfile uploaden','docker commit'],a:1,e:''},
+{c:6,q:'Waar gaat `docker push localhost:5000/web:1` naartoe?',o:['Docker Hub','De registry op localhost poort 5000','Google Cloud','Nergens, fout'],a:1,e:'De registry staat in de naam.'},
+{c:6,q:'Start een lokale registry (image `registry:2`) op poort 5000 met naam `registry`:',f:1,a:['docker run -d -p 5000:5000 --name registry registry:2','docker run -d --name registry -p 5000:5000 registry:2','docker run --name registry -d -p 5000:5000 registry:2','docker run -p 5000:5000 -d --name registry registry:2'],e:''},
+{c:6,q:'Welk API-pad toont de repositories van een registry?',o:['/api/images','/v2/_catalog','/registry/list','/v1/repos'],a:1,e:''},
+{c:6,q:'Wat doet `gcloud auth configure-docker europe-west1-docker.pkg.dev`?',o:['Maakt een repository','Configureert Docker om te authenticeren bij Artifact Registry','Pusht een image','Installeert Docker'],a:1,e:''},
+{c:7,q:'Wat betekent "scale to zero" bij Cloud Run?',o:['De container wordt verwijderd','Zonder verkeer draaien er 0 instanties (en betaal je niets)','De image wordt 0 bytes','Max 0 requests'],a:1,e:''},
+{c:7,q:'Op welke poort moet een Cloud Run container standaard luisteren?',o:['80','8080 (env-variabele PORT)','443','5000'],a:1,e:''},
+{c:7,q:'Waarom moet een Cloud Run service stateless zijn?',o:['Cloud Run heeft geen netwerk','Instanties worden dynamisch gestart en gestopt, lokale data gaat verloren','Om kosten te verhogen','Dat moet niet'],a:1,e:''},
+{c:7,q:'Wat is een "cold start"?',o:['Container starten bij lage temperatuur','Extra vertraging bij de eerste request als er geen instantie actief is','Een gefaalde deploy','De eerste docker build'],a:1,e:''},
+{c:7,q:'Welke optie maakt een Cloud Run service publiek bereikbaar?',f:1,a:['--allow-unauthenticated'],e:''},
+];
+let qz=null;
+function renderQuiz(){
+  const best=store.get('qbest',{});
+  const chs=[...new Set(Q.map(q=>q.c))];
+  const wrong=store.get('qwrong',[]);
+  $('#quizbody').innerHTML=`<h1>Quiz</h1>
+  <div class="card"><h3 style="margin-top:0">🎓 Examensimulatie</h3><p class="muted">25 willekeurige vragen uit alles, geen feedback tot het einde, timer. Lijkt het meest op de Canvas-toets.</p>
+  <button class="btn primary" onclick="startQuiz('exam')">Start examen</button> ${best.exam!=null?`<span class="muted">beste score: ${best.exam}%</span>`:''}</div>
+  <div class="card"><h3 style="margin-top:0">📚 Oefenen per hoofdstuk</h3><p class="muted">Directe feedback + uitleg.</p><div class="row">
+  <button class="btn" onclick="startQuiz(0)">Alles (${Q.length})</button>
+  ${chs.map(c=>`<button class="btn" onclick="startQuiz(${c})">${CH[c-1].t} ${best[c]!=null?`<span class="muted">· ${best[c]}%</span>`:''}</button>`).join('')}</div></div>
+  ${wrong.length?`<div class="card"><h3 style="margin-top:0">🔁 Foute vragen herhalen</h3><button class="btn" onclick="startQuiz('wrong')">Herhaal ${wrong.length} vragen</button></div>`:''}`;
+}
+function quizChapter(i){show('quiz');startQuiz(i+1)}
+function startQuiz(mode){
+  let idx=Q.map((q,i)=>i);
+  if(typeof mode==='number'&&mode>0)idx=idx.filter(i=>Q[i].c===mode);
+  if(mode==='wrong')idx=store.get('qwrong',[]);
+  idx.sort(()=>Math.random()-.5);
+  if(mode==='exam')idx=idx.slice(0,25);
+  qz={mode,idx,i:0,score:0,ans:[],t0:Date.now()};
+  drawQ();
+}
+const norm=s=>s.trim().toLowerCase().replace(/\s+/g,' ').replace(/^\$\s*/,'').replace(/["']/g,'');
+function drawQ(){
+  const b=$('#quizbody');
+  if(qz.i>=qz.idx.length)return endQuiz();
+  const q=Q[qz.idx[qz.i]],exam=qz.mode==='exam';
+  b.innerHTML=`<div class="row"><button class="btn small" onclick="renderQuiz()">← terug</button><span class="muted">Vraag ${qz.i+1}/${qz.idx.length}</span>
+  ${exam?`<span class="muted" id="timer" style="margin-left:auto"></span>`:`<span class="muted" style="margin-left:auto">score ${qz.score}</span>`}</div>
+  <div class="bar"><i style="width:${qz.i/qz.idx.length*100}%"></i></div>
+  <div class="card"><span class="tag">${CH[q.c-1].t}</span><div style="font-size:17px">${md(q.q)}</div>
+  ${q.f?`<input class="fill" id="fill" placeholder="${q.a[0].startsWith('docker')||q.a[0].startsWith('-')?'typ het commando…':'typ je antwoord…'}" autocomplete="off" spellcheck="false"><div class="row" style="margin-top:10px"><button class="btn primary" id="sub">Controleer (Enter)</button></div>`
+       :q.o.map((o,i)=>`<button class="opt" data-i="${i}">${String.fromCharCode(65+i)}. ${md(o).replace(/^<p>|<\/p>\n?$/g,'')}</button>`).join('')}
+  <div id="fb"></div></div>`;
+  if(exam){const tick=()=>{const e=$('#timer');if(!e)return;const s=Math.floor((Date.now()-qz.t0)/1000);e.textContent=`⏱ ${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;setTimeout(tick,1000)};tick()}
+  if(q.f){const inp=$('#fill');inp.focus();const go=()=>answer(q.a.map(norm).includes(norm(inp.value)),inp.value);$('#sub').onclick=go;inp.onkeydown=e=>{if(e.key==='Enter')go()}}
+  else b.querySelectorAll('.opt').forEach(o=>o.onclick=()=>answer(+o.dataset.i===q.a,+o.dataset.i));
+}
+function answer(ok,given){
+  const qi=qz.idx[qz.i],q=Q[qi];
+  if(ok)qz.score++;
+  qz.ans.push({qi,ok,given});
+  let w=store.get('qwrong',[]);w=w.filter(x=>x!==qi);if(!ok)w.push(qi);store.set('qwrong',w);
+  if(qz.mode==='exam'){qz.i++;return drawQ()}
+  const b=$('#quizbody');
+  if(q.f){$('#fill').disabled=true;$('#sub').remove()}
+  else b.querySelectorAll('.opt').forEach(o=>{o.disabled=true;if(+o.dataset.i===q.a)o.classList.add('good');else if(+o.dataset.i===given)o.classList.add('wrong')});
+  $('#fb').innerHTML=`<div class="expl"><b style="color:var(${ok?'--ok':'--bad'})">${ok?'✔ Juist!':'✘ Fout'}</b>
+   ${q.f?`<div>Juist antwoord: <code>${q.a[0]}</code></div>`:''}${q.e?md(q.e):''}</div>
+   <div class="row" style="margin-top:12px"><button class="btn primary" id="nx">Volgende (Enter) →</button></div>`;
+  const nx=()=>{document.removeEventListener('keydown',kh);qz.i++;drawQ()};
+  const kh=e=>{if(e.key==='Enter'){e.preventDefault();nx()}};
+  setTimeout(()=>document.addEventListener('keydown',kh),50);
+  $('#nx').onclick=nx;
+}
+function endQuiz(){
+  const pct=Math.round(qz.score/qz.idx.length*100);
+  const best=store.get('qbest',{}),key=qz.mode==='exam'?'exam':qz.mode;
+  if(key!=='wrong'&&(best[key]==null||pct>best[key])){best[key]=pct;store.set('qbest',best)}
+  const s=Math.floor((Date.now()-qz.t0)/1000);
+  $('#quizbody').innerHTML=`<div class="card" style="text-align:center"><h1 style="font-size:46px;margin:10px">${pct}%</h1>
+  <p>${qz.score} / ${qz.idx.length} juist · ${Math.floor(s/60)}m${s%60}s · op 20: <b>${Math.round(pct/5)}</b></p>
+  <p>${pct>=80?'🔥 Klaar voor het examen!':pct>=50?'👍 Geslaagd, maar herhaal de fouten.':'📖 Nog even de theorie herlezen.'}</p>
+  <div class="row" style="justify-content:center"><button class="btn primary" onclick="renderQuiz()">Terug</button></div></div>
+  ${qz.ans.filter(a=>!a.ok).map(a=>{const q=Q[a.qi];return `<div class="card"><span class="tag">fout</span>${md(q.q)}
+   <div>Jouw antwoord: <code>${q.f?(a.given||'(leeg)'):q.o[a.given]}</code></div>
+   <div>Juist: <code>${q.f?q.a[0]:q.o[q.a]}</code></div>${q.e?`<div class="expl">${md(q.e)}</div>`:''}</div>`}).join('')}`;
+  updProg();
+}
+
+// ------------------------------------------------------------------ oefenen
+let EX=[],cur=null,curFile=null,dirty=false;
+async function loadLab(force){
+  if(EX.length&&!force)return;
+  try{EX=await (await fetch('/api/ex')).json()}catch{$('#expane').innerHTML='<p>Kan de sandbox niet bereiken.</p>';return}
+  drawExList();openEx(store.get('ex',EX[0].id));
+}
+function drawExList(){
+  const done=store.get('exdone',{});
+  $('#exlist').innerHTML='<div class="muted" style="font-size:12px;padding:4px 8px">OEFENINGEN</div>'+EX.map(e=>`<button data-id="${e.id}" class="${cur&&cur.id===e.id?'on':''}">${e.md.split('\n')[0].replace(/^#\s*/,'')}<span class="d">${done[e.id]?'✔':''}</span></button>`).join('');
+  $('#exlist').querySelectorAll('button').forEach(b=>b.onclick=()=>openEx(b.dataset.id));
+}
+async function openEx(id){
+  if(dirty&&!confirm('Niet-opgeslagen wijzigingen weggooien?'))return;
+  cur=EX.find(e=>e.id===id)||EX[0];store.set('ex',cur.id);dirty=false;drawExList();
+  const cdCmd=`cd /work/oefeningen/${cur.dir}`;
+  $('#expane').innerHTML=md(cur.md)+
+   `<div class="row" style="margin-top:6px"><span class="muted" style="font-size:13px">Map in terminal:</span><code>${cdCmd}</code><button class="btn small" onclick="copy('${cdCmd}')">kopieer</button></div>`+
+   (cur.files.length?`<div class="ftabs">${cur.files.map(f=>`<button data-f="${f}">${f.split('/').slice(1).join('/')}</button>`).join('')}</div>
+    <textarea id="ed" spellcheck="false"></textarea>
+    <div class="row" style="margin-top:6px"><button class="btn" id="save">💾 Opslaan (Ctrl+S)</button><span class="muted" id="edstat" style="font-size:13px"></span></div>`:'')+
+   `<div class="row" style="margin-top:16px"><button class="btn ok" id="chk">✔ Check mijn oplossing</button><button class="btn" id="solb">💡 Toon oplossing</button></div>
+    <div id="checkout"></div><div id="sol" class="card"></div>`;
+  $('#expane').scrollTop=0;
+  if(cur.files.length){
+    $('#expane').querySelectorAll('.ftabs button').forEach(b=>b.onclick=()=>openFile(b.dataset.f));
+    const ed=$('#ed');
+    ed.oninput=()=>{dirty=true;$('#edstat').textContent='● niet opgeslagen'};
+    ed.onkeydown=e=>{
+      if(e.key==='Tab'){e.preventDefault();const s=ed.selectionStart;ed.setRangeText('  ',s,ed.selectionEnd,'end');ed.oninput()}
+      if((e.ctrlKey||e.metaKey)&&e.key==='s'){e.preventDefault();saveFile()}
+    };
+    $('#save').onclick=saveFile;
+    openFile(cur.files.find(f=>/Dockerfile|compose/.test(f))||cur.files[0]);
+  }
+  $('#chk').onclick=runCheck;
+  $('#solb').onclick=async()=>{const s=$('#sol');if(s.style.display==='block'){s.style.display='none';return}
+    s.innerHTML=md(await (await fetch('/api/sol/'+cur.id)).text());s.style.display='block';s.scrollIntoView({behavior:'smooth'})};
+}
+async function openFile(f){
+  if(dirty&&!confirm('Niet-opgeslagen wijzigingen weggooien?'))return;
+  curFile=f;dirty=false;
+  $('#expane').querySelectorAll('.ftabs button').forEach(b=>b.classList.toggle('on',b.dataset.f===f));
+  $('#ed').value=await (await fetch('/api/file?p='+encodeURIComponent(f))).text();
+  $('#edstat').textContent='/work/oefeningen/'+f;
+}
+async function saveFile(){
+  const r=await fetch('/api/file?p='+encodeURIComponent(curFile),{method:'PUT',body:$('#ed').value});
+  if(r.ok){dirty=false;$('#edstat').textContent='✔ opgeslagen · /work/oefeningen/'+curFile;toast('Opgeslagen')}else toast('Opslaan mislukt')
+}
+async function runCheck(){
+  if(dirty)await saveFile();
+  const o=$('#checkout');o.style.display='block';o.textContent='⏳ bezig met controleren…';
+  const {out}=await (await fetch('/api/check/'+cur.id,{method:'POST'})).json();
+  o.innerHTML=out.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/^(\s*✔.*)$/gm,'<span class="g">$1</span>').replace(/^(\s*✘.*)$/gm,'<span class="r">$1</span>');
+  if(/Alles juist/.test(out)){const d=store.get('exdone',{});d[cur.id]=true;store.set('exdone',d);drawExList();updProg();toast('🎉 Oefening '+cur.id+' geslaagd!')}
+}
+function copy(t){navigator.clipboard?.writeText(t).then(()=>toast('Gekopieerd, plak in de terminal (Ctrl+Shift+V)'))}
+function reloadTerm(){$('#term').src='/term/?'+Date.now()}
+async function resetSandbox(){
+  if(!confirm('Alle containers, images, volumes en netwerken IN DE SANDBOX wissen? (Je bestanden in de editor blijven.)'))return;
+  toast('Bezig met leegmaken…');
+  await fetch('/api/reset',{method:'POST'});toast('Sandbox is leeg');
+}
+window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue=''}});
+
+// ------------------------------------------------------------------ cheat sheet
+const CHEAT=`# 📋 Cheat sheet
+| Container | |
+|---|---|
+| \`docker run -d --name n -p H:C -e K=V -v vol:/pad --network net --rm IMG [CMD]\` | starten |
+| \`docker ps [-a]\` · \`logs -f n\` · \`exec -it n sh\` · \`inspect n\` · \`stats\` | bekijken |
+| \`docker stop · start · restart · kill · rm [-f] n\` | levenscyclus |
+| \`docker cp n:/pad ./\` | kopiëren |
+
+| Images | |
+|---|---|
+| \`docker pull · push IMG:tag\` · \`images\` · \`rmi\` · \`tag SRC DST\` · \`history\` · \`commit n img:tag\` | |
+| \`docker build -t naam:tag [-f Dockerfile] [--target stage] [--build-arg K=V] .\` | bouwen |
+| \`docker login\` · \`docker system prune -a --volumes\` · \`docker system df\` | |
+
+| Volumes & netwerk | |
+|---|---|
+| \`docker volume create · ls · inspect · rm · prune\` | |
+| \`-v naam:/pad\` (volume) · \`-v $(pwd)/x:/pad:ro\` (bind) · \`--tmpfs /tmp\` | |
+| \`docker network create · ls · inspect · connect · disconnect · rm\` | |
+| drivers: \`bridge\` · \`host\` · \`none\` · \`overlay\` | |
+
+| Compose | |
+|---|---|
+| \`docker compose up -d [--build] [--scale web=3]\` · \`down [-v]\` · \`ps\` · \`logs -f\` · \`exec svc sh\` · \`config\` · \`build\` · \`pull\` | |
+
+## Dockerfile-skelet
+\`\`\`dockerfile
+FROM node:22-alpine AS build      # stage met naam
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM nginx:alpine
+COPY --from=build /app/dist /usr/share/nginx/html
+EXPOSE 80
+# USER ... | ENV K=V | ARG K | HEALTHCHECK CMD ...
+CMD ["nginx", "-g", "daemon off;"]
+\`\`\`
+
+## compose.yaml-skelet
+\`\`\`yaml
+services:
+  web:
+    build: .
+    ports: ["8080:80"]
+    environment:
+      DB_HOST: db
+    depends_on: [db]
+  db:
+    image: mariadb:11
+    environment:
+      MARIADB_ROOT_PASSWORD: geheim
+    volumes:
+      - dbdata:/var/lib/mysql
+volumes:
+  dbdata:
+\`\`\`
+
+## Valkuilen
+- \`-p HOST:CONTAINER\`, nooit omgekeerd
+- \`EXPOSE\` publiceert niets
+- argumenten na de image **vervangen CMD**, niet ENTRYPOINT
+- default bridge = geen DNS op naam
+- \`down -v\` = data weg
+- app in container moet op **0.0.0.0** luisteren
+- niet-root kan geen poort < 1024 binden
+- opruimen in **dezelfde** RUN-layer
+- Cloud Run: poort uit \`$PORT\` (8080), stateless
+`;
+
+// ------------------------------------------------------------------ progress
+function updProg(){
+  const r=Object.values(store.get('read',{})).filter(Boolean).length;
+  const k=Object.values(store.get('known',{})).filter(Boolean).length;
+  const d=Object.values(store.get('exdone',{})).filter(Boolean).length;
+  const ex=store.get('qbest',{}).exam;
+  $('#prog').textContent=`📖 ${r}/${CH.length} · 🃏 ${k}/${FC.length} · 💻 ${d}/16${ex!=null?` · 🎓 ${ex}%`:''}`;
+}
+function renderProgOnly(){updProg()}
+
+renderLearn();renderCards();renderQuiz();
+$('#cheatbody').innerHTML=md(CHEAT);
+updProg();
+show(store.get('tab','learn'));
+</script>
+</body>
+</html>

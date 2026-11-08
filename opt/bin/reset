@@ -1,0 +1,6 @@
+#!/bin/bash
+# Wist alles in de SANDBOX-daemon (niet op de NAS zelf).
+if [ "$1" != "-y" ]; then read -p "Alle containers, images, volumes en netwerken in de sandbox wissen? [j/N] " a; [ "$a" = j ] || exit 0; fi
+docker rm -f $(docker ps -aq) 2>/dev/null
+docker system prune -af --volumes
+echo "Sandbox is leeg."
